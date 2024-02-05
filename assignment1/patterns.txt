@@ -13,22 +13,58 @@
 // wish.
 
 
-// Twenty-four seven
-\d+/\d+
+
 
 // ADD YOUR PATTERNS HERE
 
-//email-address
+// decades such as 1980s
+\d{4}s
+
+
+// http url
+http\:\/\/host\/path\/
+https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+,.!~#?&\/\/=]*)
+
+// prices such as $120
+\$\d+
+
+//email address with longer domain (jb_15@a.b.c.se)
+[a-z]+\_[0-9]+\@[a-z]+(\.[a-z]+)+
+
+// word abbrevations
+[a-z](\.[a-z]\.)+
+
+
+//possessive
+\'em
+
+// Twenty-four seven
+\d+/\d+
+
+// phone numbers and time(just hours!)
+[0-9]+((-|:)[0-9a-z]+){1,3}
+
+// dot separated numbers
+\d+(\.|\,)\d+((\.|\,)\d+)*
+
+// email-address
 ^([a-zA-Z0-9_\-\.]{1,64})@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?){1,255}$
 
-//http url
-^(http(s)?)\:\/\/([a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?(\/[(@)?a-zA-Z0-9\-\._\?\,\'\/\\\+&%\$#\=!\~]*)*)$|^(http(s)?)\:\/\/((%[0-9a-fA-F]{2})+\.[a-zA-Z0-9]+\/.*)$
-
-//ip-address
+// ip-address
 [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(\.)?
 
-//phone-numbers
+// phone-numbers
 ^\+?[0-9]\d{1,20}|^\+?[0-9]|^\d{1}-\d{3}-\d{3}-\d{4}$
+
+// simple words (such as it's)
+\b(?:[^\s()]+|\([^)]*\))\b
+
+// compound-words
+\w+-\w+
+
+\w+(\:|\[|\.)+\w+
+
+
 
 // The patterns will be tried from top to bottom, so it is a
 // good idea to put more specific patterns above more general
