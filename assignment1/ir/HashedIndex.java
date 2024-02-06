@@ -39,7 +39,7 @@ public class HashedIndex implements Index {
     }
 
     /**
-     * Returns the postings for a specific term, or null
+     * Returns the postingslist for a specific token or null
      * if the term is not in the index.
      */
     public PostingsList getPostings(String token) {

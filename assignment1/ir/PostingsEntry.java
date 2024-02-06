@@ -32,6 +32,10 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         this.offset.add(offset);
     }
 
+    public PostingsEntry(int docID) {
+        this.docID = docID;
+    }
+
     public int compareTo(PostingsEntry other) {
         return Double.compare(other.score, score);
     }
