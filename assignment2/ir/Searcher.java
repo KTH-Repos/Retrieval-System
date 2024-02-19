@@ -13,6 +13,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -50,9 +51,6 @@ public class Searcher {
             searchResults = simpleSearch(query, queryType);
         } else if (queryType == queryType.RANKED_QUERY) {
             searchResults = rankedTfIdf(query.queryterm);
-            for (int i = 0; i < searchResults.getEntries().size(); i++) {
-                System.out.println(searchResults.getEntries().get(i).docID);
-            }
         }
         return searchResults;
     }
@@ -261,6 +259,9 @@ public class Searcher {
             }
         }
 
+        // Create a set to keep track of unique documents
+        Set<Integer> uniqueDocs = new HashSet<>();
+
         // Create a PostingsList to store the results
         PostingsList results = new PostingsList();
 
@@ -271,9 +272,10 @@ public class Searcher {
             PostingsList allDocuments = index.getPostings(term);
 
             for (PostingsEntry document : allDocuments.getEntries()) {
-                if (!results.getEntries().contains(document)) {
+                if (!uniqueDocs.contains(document.docID)) {
                     document.score = scores.getOrDefault(document.docID, 0.0) / index.docLengths.get(document.docID);
                     results.getEntries().add(document);
+                    uniqueDocs.add(document.docID); // Add document to the set
                 }
             }
         }
