@@ -8,6 +8,7 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class PostingsList {
 
@@ -70,6 +71,10 @@ public class PostingsList {
         return this.list;
     }
 
+    public void setList(ArrayList<PostingsEntry> list) {
+        this.list = list;
+    }
+
     /**
      * Find the entry of a token given a docID
      * 
@@ -83,6 +88,24 @@ public class PostingsList {
             }
         }
         return null; // Not found
+    }
+
+    public int findPostingsEntryIndex(PostingsEntry entry) {
+
+        for (int i = 0; i < list.size(); i++) {
+            if (entry.docID == list.get(i).docID) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void addEntry(PostingsEntry entry) {
+        this.list.add(entry);
+    }
+
+    public void sortEntries() {
+        Collections.sort(list);
     }
 
     @Override

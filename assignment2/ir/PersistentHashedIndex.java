@@ -238,8 +238,8 @@ public class PersistentHashedIndex implements Index {
                 }
                 usedHashes.add(pointer);
                 Entry entry;
-                entry = new Entry(dataFilePointer, token, size);
-                writeEntry(entry, pointer);
+                // entry = new Entry(dataFilePointer, token, size);
+                // writeEntry(entry, pointer);
             }
 
         } catch (IOException e) {
@@ -259,7 +259,6 @@ public class PersistentHashedIndex implements Index {
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         // ed
 
-        
         return null;
     }
 

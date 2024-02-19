@@ -47,7 +47,7 @@ public class HashedIndex implements Index {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        System.out.println("Size of index : " + index.size());
+        // System.out.println("Size of index : " + index.size());
         return index.get(token);
     }
 
@@ -59,5 +59,9 @@ public class HashedIndex implements Index {
      * No need for cleanup in a HashedIndex.
      */
     public void cleanup() {
+    }
+
+    public int getCollectionSize() {
+        return docNames.size();
     }
 }
