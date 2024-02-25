@@ -7,6 +7,8 @@
 
 package ir;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ListIterator;
@@ -30,6 +32,8 @@ public class Searcher {
     /** The k-gram index to be searched by this Searcher */
     KGramIndex kgIndex;
 
+    Map<String, Double> pagedRankProb = new HashMap<>();
+
     /** Constructor */
     public Searcher(Index index, KGramIndex kgIndex) {
         this.index = index;
@@ -47,10 +51,27 @@ public class Searcher {
         //
         PostingsList searchResults = null;
 
-        if (queryType == queryType.INTERSECTION_QUERY || queryType == queryType.PHRASE_QUERY) {
-            searchResults = simpleSearch(query, queryType);
-        } else if (queryType == queryType.RANKED_QUERY) {
-            searchResults = rankedTfIdf(query.queryterm);
+        switch (queryType) {
+            case INTERSECTION_QUERY:
+                searchResults = simpleSearch(query, queryType);
+                break;
+
+            case PHRASE_QUERY:
+                searchResults = simpleSearch(query, queryType);
+                break;
+
+            case RANKED_QUERY:
+                if (pagedRankProb.isEmpty())
+                    readPagedRank();
+                if (rankingType == rankingType.TF_IDF)
+                    searchResults = rankedTfIdf(query.queryterm);
+
+                else if (rankingType == rankingType.PAGERANK)
+                    searchResults = rankedPageRank(query.queryterm);
+
+                else if (rankingType == rankingType.COMBINATION)
+                    searchResults = combinedPagedRank(query.queryterm);
+                break;
         }
         return searchResults;
     }
@@ -110,7 +131,6 @@ public class Searcher {
                 }
             }
         }
-
         return answer;
     }
 
@@ -184,58 +204,7 @@ public class Searcher {
                     break;
             }
         }
-
         return answer;
-    }
-
-    public PostingsList rankResults(Query query) {
-
-        Map<PostingsEntry, Double> scores = new HashMap<>();
-
-        for (int i = 0; i < query.queryterm.size(); i++) {
-            String term = query.queryterm.get(i).term;
-            PostingsList list = index.getPostings(term);
-
-            for (int j = 0; j < list.size(); j++) {
-                PostingsEntry entry = list.get(i);
-                double score = tfidf(entry, term);
-
-                scores.merge(entry, score, Double::sum);
-
-                /*
-                 * if (!scores.containsKey(entry)) {
-                 * scores.put(entry, score);
-                 * } else {
-                 * scores.put(entry, scores.get(entry) + score);
-                 * }
-                 */
-            }
-        }
-        PostingsList rankedResults = new PostingsList();
-
-        // ArrayList<String> queryTerms = removeDuplicates(query);
-
-        for (int i = 0; i < query.queryterm.size(); i++) {
-            PostingsList termDocs = index.getPostings(query.queryterm.get(i).term);
-
-            for (int j = 0; j < termDocs.size(); j++) {
-                PostingsEntry entry = termDocs.get(i);
-                int entryIndex = rankedResults.findPostingsEntryIndex(entry);
-                if (entryIndex < 0) {
-                    rankedResults.addEntry(entry);
-                }
-            }
-        }
-
-        ArrayList<PostingsEntry> matchedDocs = new ArrayList<>(scores.keySet());
-        for (int i = 0; i < matchedDocs.size(); i++) {
-            PostingsEntry entry = matchedDocs.get(i);
-            entry.score = scores.get(entry) / index.docLengths.get(entry.docID);
-        }
-
-        rankedResults.setList(matchedDocs);
-        rankedResults.sortEntries();
-        return rankedResults;
     }
 
     private PostingsList rankedTfIdf(List<Query.QueryTerm> queryTerms) {
@@ -279,32 +248,9 @@ public class Searcher {
                 }
             }
         }
-
         // Sort the results by score
         results.sortEntries();
-
         return results;
-    }
-
-    public ArrayList<String> removeDuplicates(Query query) {
-
-        ArrayList<String> queryTerms = new ArrayList<>();
-        for (int i = 0; i < query.queryterm.size(); i++) {
-            queryTerms.add(query.queryterm.get(i).term);
-        }
-
-        Set<String> set = new LinkedHashSet<>();
-
-        // Add the elements to set
-        set.addAll(queryTerms);
-
-        // Clear the list
-        queryTerms.clear();
-
-        // add the elements of set
-        // with no duplicates to the list
-        queryTerms.addAll(set);
-        return queryTerms;
     }
 
     public double tfidf(PostingsEntry entry, String term) {
@@ -315,6 +261,105 @@ public class Searcher {
 
         double idf = Math.log10(collectionSize / documentFrequency);
         return termFrequency * idf;
+    }
+
+    public PostingsList rankedPageRank(List<Query.QueryTerm> queryTerms) {
+        for (Query.QueryTerm queryTerm : queryTerms) {
+            String term = queryTerm.term;
+
+            // Retrieve documents containing the search term
+            PostingsList allDocuments = index.getPostings(term);
+
+            // Loop through all retrieved documents
+            for (PostingsEntry document : allDocuments.getEntries()) {
+                String docTitle = Index.docNames.get(document.docID);
+                docTitle = docTitle.substring(docTitle.lastIndexOf("\\") + 1);
+                document.score = pagedRankProb.get(docTitle);
+            }
+        }
+        // Create a set to keep track of unique documents
+        Set<Integer> uniqueDocs = new HashSet<>();
+
+        PostingsList results = new PostingsList();
+
+        for (Query.QueryTerm queryTerm : queryTerms) {
+            String term = queryTerm.term;
+            // Retrieve documents containing the search term
+            PostingsList allDocuments = index.getPostings(term);
+
+            for (PostingsEntry document : allDocuments.getEntries()) {
+                if (!uniqueDocs.contains(document.docID)) {
+                    results.getEntries().add(document);
+                    uniqueDocs.add(document.docID); // Add document to the set
+                }
+            }
+        }
+        results.sortEntries();
+        return results;
+    }
+
+    public PostingsList combinedPagedRank(List<Query.QueryTerm> queryTerms) {
+        // Create empty dictionary to hold document scores
+        Map<Integer, Double> scores = new HashMap<>();
+        // Loop through all search query terms
+        for (Query.QueryTerm queryTerm : queryTerms) {
+            String term = queryTerm.term;
+
+            // Retrieve documents containing the search term
+            PostingsList allDocuments = index.getPostings(term);
+
+            // Loop through all retrieved documents
+            for (PostingsEntry document : allDocuments.getEntries()) {
+                // Calculate the score for the document for the current query term
+                double score = tfidf(document, term);
+
+                // Accumulate the score for the document
+                scores.merge(document.docID, score, Double::sum);
+            }
+        }
+        // Create a set to keep track of unique documents
+        Set<Integer> uniqueDocs = new HashSet<>();
+
+        // Create a PostingsList to store the results
+        PostingsList results = new PostingsList();
+
+        double weight = 0.005;
+        // Add all documents from scores to the results list
+        for (Query.QueryTerm queryTerm : queryTerms) {
+            String term = queryTerm.term;
+            // Retrieve documents containing the search term
+            PostingsList allDocuments = index.getPostings(term);
+
+            for (PostingsEntry document : allDocuments.getEntries()) {
+                if (!uniqueDocs.contains(document.docID)) {
+                    double tdfScore = scores.getOrDefault(document.docID, 0.0) / index.docLengths.get(document.docID);
+                    String docTitle = Index.docNames.get(document.docID);
+                    docTitle = docTitle.substring(docTitle.lastIndexOf("\\") + 1);
+                    double pageRankScore = pagedRankProb.getOrDefault(docTitle, 0.0);
+                    document.score = (1 - weight) * pageRankScore + weight * tdfScore;
+                    results.getEntries().add(document);
+                    uniqueDocs.add(document.docID); // Add document to the set
+                }
+            }
+        }
+        results.sortEntries();
+        return results;
+    }
+
+    public void readPagedRank() {
+        try {
+            System.err.println("Reading pagedRankProb to search engine... ");
+            BufferedReader reader = new BufferedReader(new FileReader("pagerank/pageRankProb.txt"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("="); // Split line by '='
+                String title = parts[0].trim(); // Get the title
+                double probability = Double.parseDouble(parts[1].trim()); // Get the probability
+                pagedRankProb.put(title, probability); // Put title and probability into HashMap
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 }

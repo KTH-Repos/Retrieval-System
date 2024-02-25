@@ -41,6 +41,11 @@ public class PageRank {
 	Map<String, Double> pageRankProbs = new HashMap<>();
 
 	/**
+	 * Map docID to docTitle
+	 */
+	HashMap<String, String> idToTitle = new HashMap<>();
+
+	/**
 	 * The number of outlinks from each node.
 	 */
 	int[] out = new int[MAX_NUMBER_OF_DOCS];
@@ -62,8 +67,9 @@ public class PageRank {
 	public PageRank(String filename) {
 		int noOfDocs = readDocs(filename);
 		iterate(noOfDocs, 1000);
-		// PageRank.printHashMap(link);
-		// PageRank.printHashMapElements(docNumber);
+		// readDocumentNames("davisTitles.txt");
+		// writePageRankToFile();
+
 	}
 
 	/* --------------------------------------------- */
@@ -131,6 +137,60 @@ public class PageRank {
 		return fileIndex;
 	}
 
+	/**
+	 * Read davisTitles.txt to map docID to docTitle in idToTitle
+	 * 
+	 * @param filename
+	 */
+	void readDocumentNames(String filename) {
+		int fileIndex = 0;
+		try {
+			System.err.print("Reading davisTitles.txt... ");
+			BufferedReader in = new BufferedReader(new FileReader(filename));
+			String line;
+			while ((line = in.readLine()) != null && fileIndex < MAX_NUMBER_OF_DOCS) {
+				int index = line.indexOf(";");
+				String id = line.substring(0, index);
+				String title = line.substring(index + 1);
+				idToTitle.put(id, title);
+			}
+			if (fileIndex >= MAX_NUMBER_OF_DOCS) {
+				System.err.print("stopped reading since documents table is full. ");
+			} else {
+				System.err.print("done. ");
+			}
+		} catch (FileNotFoundException e) {
+			System.err.println("File " + filename + " not found!");
+		} catch (IOException e) {
+			System.err.println("Error reading file " + filename);
+		}
+		System.err.println("Read " + fileIndex + " number of documents");
+	}
+
+	/**
+	 * Write pageRankedProb to file
+	 */
+	void writePageRankToFile() {
+		BufferedWriter bufferedWriter = null;
+		try {
+			bufferedWriter = new BufferedWriter(new FileWriter("pageRankProb.txt"));
+			for (Map.Entry<String, Double> entry : pageRankProbs.entrySet()) {
+				String docTitle = idToTitle.get(entry.getKey());
+				bufferedWriter.write(docTitle + "=" + entry.getValue());
+				bufferedWriter.newLine(); // Move to the next line
+				bufferedWriter.flush();
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		} finally {
+			try {
+				bufferedWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/* --------------------------------------------- */
 
 	/*
@@ -175,6 +235,7 @@ public class PageRank {
 
 	/**
 	 * Sort the probabilities of the caluclated pageRanks
+	 * 
 	 * @param numberOfDocs
 	 * @param nextStat
 	 */
@@ -198,6 +259,7 @@ public class PageRank {
 
 	/**
 	 * Normalize the stationary array after every iteration
+	 * 
 	 * @param nextStat
 	 * @return
 	 */
@@ -218,6 +280,7 @@ public class PageRank {
 
 	/**
 	 * Calculate the entries of the transition matrix
+	 * 
 	 * @param numlinks
 	 * @param numberOfDocs
 	 * @return
@@ -229,6 +292,7 @@ public class PageRank {
 	/**
 	 * Calculate the difference between the old and new stationary arrays
 	 * after every iteration
+	 * 
 	 * @param currentStat
 	 * @param nextStat
 	 * @return
@@ -243,6 +307,7 @@ public class PageRank {
 
 	/**
 	 * Print the transition matrix
+	 * 
 	 * @param map
 	 */
 	public static void printHashMap(HashMap<Integer, HashMap<Integer, Boolean>> map) {
@@ -267,14 +332,14 @@ public class PageRank {
 	/* --------------------------------------------- */
 
 	public static void main(String[] args) {
-		// long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		if (args.length != 1) {
 			System.err.println("Please give the name of the link file");
 		} else {
 			new PageRank(args[0]);
-			// long endTime = System.currentTimeMillis();
-			// double execTime = (endTime - startTime) / 1000.0;
-			// System.out.println("exec time in seconds: " + execTime);
+			long endTime = System.currentTimeMillis();
+			double execTime = (endTime - startTime) / 1000.0;
+			System.out.println("exec time in seconds: " + execTime);
 		}
 	}
 }
