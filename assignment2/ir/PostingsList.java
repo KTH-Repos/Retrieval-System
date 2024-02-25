@@ -104,6 +104,9 @@ public class PostingsList {
         this.list.add(entry);
     }
 
+    /**
+     * Sort the list using documentID of entries
+     */
     public void sortEntries() {
         Collections.sort(list);
     }
