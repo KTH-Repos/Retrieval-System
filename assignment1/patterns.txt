@@ -13,15 +13,18 @@
 // wish.
 
 
+// RUN THESE COMMANDS ON TERMINAL IN ORDER
+// sh run_tokenizer.sh
+// diff tokenized_result.txt token_test_tokenized_ok.txt --strip-trailing-cr > result1.txt
+
 
 
 // ADD YOUR PATTERNS HERE
 
-// Website
+// URL for website
 http(s)?:\/\/.*
-// http(s)?:\/\/(www\.)?([\w\%_-]+[\.\:])*\w+\/.*
 
-// File names (but not web adresses)
+// File names
 [\d\w\_]+?\.(doc|ppt|xlsx)
 
 // Email
@@ -36,43 +39,32 @@ http(s)?:\/\/.*
 \w+\'\w+
 \'\w+$
 
-// America phone numbers
+// phone numbers
 (\+?\d\-?)?\d{3}\-?\d{3}\-?\d{4}
 \+\d+
 
-// 6.15
+// Decimals/Numbers separated by points
 (\d+)(\.\d+)+
 
-// 18:15:34,
+// Time in hh:mm:sec (18:15:34)
 \d{1,2}\:\d{1,2}(\:\d{1,2})?
 
 
-(\d{3}|\d{6})-\w{4}
-
-// 190,194,191
+// Huge numbers (three digits separated by commas)
 (\d+)(\,\d+)+
 
-// p.m.
+// Abbrevations (letters separated by points) e.g., p.m.
 \w\.\w\.
 
-// $100
+// Money e.g. $100
 \$\d+
 
-// some-thing
+// expressions(words/numbers) separated by hyphen e.g. hyphen-hyphen
 \w+\-\w+
 
 
 // Twenty-four seven
 \d+\/\d+
-
-// money/blah
-[a-zA-Z]+(?=(\/\w+))
-(?<=\/)[a-zA-Z]+
-
-// 250,000-selling
-[\d\,]+(?=\-)
-(?<=\-)[a-zA-Z]+
-
 
 
 // The patterns will be tried from top to bottom, so it is a

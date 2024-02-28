@@ -20,9 +20,9 @@ import java.io.File;
 public class Engine {
 
     /** The inverted index. */
-    // Index index = new HashedIndex();
+    Index index = new HashedIndex();
     // Assignment 1.7: Comment the line above and uncomment the next line
-    Index index = new PersistentHashedIndex();
+    // Index index = new PersistentHashedIndex();
 
     /** The indexer creating the search index. */
     Indexer indexer;
@@ -138,45 +138,6 @@ public class Engine {
 
     public static void main(String[] args) {
         Engine e = new Engine(args);
-
-        // PersistentHashedIndex index = new PersistentHashedIndex();
-        // index.writeIndex();
-        /*
-         * String inputText = "20080527 18:37:16 slow slow slow or entry entry entry";
-         * String inputText2 = "entry entry slow slow slow or slow slow slow";
-         * // Creating a list of strings by splitting the text using spaces
-         * List<String> stringList = new ArrayList<>();
-         * List<String> stringList2 = new ArrayList<>();
-         * String[] words = inputText.split("\\s+");
-         * String[] words2 = inputText2.split("\\s+");
-         * 
-         * for (String word : words) {
-         * System.out.println(word);
-         * stringList.add(word);
-         * }
-         * 
-         * for (String word : words2) {
-         * System.out.println(word);
-         * stringList2.add(word);
-         * }
-         * 
-         * // Printing the list
-         * // System.out.println(stringList);
-         * for (int i = 0; i < stringList.size(); i++) {
-         * e.index.insert(stringList.get(i), 0, i);
-         * }
-         * 
-         * for (int i = 0; i < stringList2.size(); i++) {
-         * e.index.insert(stringList2.get(i), 1, i);
-         * }
-         * 
-         * Query query = new Query();
-         * query.queryterm.add(query.new QueryTerm("entry", 0));
-         * query.queryterm.add(query.new QueryTerm("slow", 0));
-         * 
-         * e.searcher.search(query, QueryType.PHRASE_QUERY);
-         */
-
     }
 
 }

@@ -14,6 +14,9 @@ public class PostingsList {
     /** The postings list */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
+    /**
+     * Create empty postingslist
+     */
     public PostingsList() {
 
     }
@@ -29,7 +32,8 @@ public class PostingsList {
     }
 
     /**
-     * Insert a new entry to the list if the list already exists
+     * Insert a new entry to the list by checking prsence of
+     * entry with help of docID first
      * 
      * @param docID
      * @param offset
@@ -55,6 +59,14 @@ public class PostingsList {
     /** Returns the ith posting. */
     public PostingsEntry get(int i) {
         return list.get(i);
+    }
+
+    /**
+     * Add an entry to the postingslist (used in persisted index)
+     * @param entry entry object
+     */
+    public void addPersistedEntry(PostingsEntry entry) {
+        this.list.add(entry);
     }
 
     //
@@ -88,14 +100,10 @@ public class PostingsList {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("PostingsList: [");
         for (int i = 0; i < list.size(); i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
             sb.append(list.get(i).toString());
         }
-        sb.append("]");
+        sb.append("\n");
         return sb.toString();
     }
 

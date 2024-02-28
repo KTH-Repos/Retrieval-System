@@ -32,7 +32,11 @@ public class Searcher {
     /** The k-gram index to be searched by this Searcher */
     KGramIndex kgIndex;
 
+    /** Stores pageRank scores of docs */
     Map<String, Double> pagedRankProb = new HashMap<>();
+
+    /** Stores euclidean length of docs */
+    HashMap<Integer, Double> docsEucLength = new HashMap<>();
 
     /** Constructor */
     public Searcher(Index index, KGramIndex kgIndex) {
@@ -221,7 +225,8 @@ public class Searcher {
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
-                double score = tfidf(document, term);
+                // double score = tfidf(document, term);
+                double score = tfidfWithEuclidean(document, term);
 
                 // Accumulate the score for the document
                 scores.merge(document.docID, score, Double::sum);
@@ -253,8 +258,14 @@ public class Searcher {
         return results;
     }
 
+    /**
+     * Calcualte the tfidf score of a document given a search term
+     * 
+     * @param entry
+     * @param term
+     * @return
+     */
     public double tfidf(PostingsEntry entry, String term) {
-
         int termFrequency = entry.offset.size();
         int collectionSize = index.docNames.size();
         int documentFrequency = index.getPostings(term).size();
@@ -263,6 +274,30 @@ public class Searcher {
         return termFrequency * idf;
     }
 
+    /***
+     * Calculate the tfidf score of a document with euclidean length
+     * given a search term
+     * 
+     * @param entry
+     * @param term
+     * @return
+     */
+    public double tfidfWithEuclidean(PostingsEntry entry, String term) {
+        int termFrequency = entry.offset.size();
+        int collectionSize = index.docNames.size();
+        int documentFrequency = index.getPostings(term).size();
+        double eucLength = docsEucLength.get(entry.docID);
+
+        double idf = (Math.log10((double) collectionSize / (double) documentFrequency));
+
+        return ((double) termFrequency * idf) / eucLength;
+    }
+
+    /**
+     * 
+     * @param queryTerms
+     * @return
+     */
     public PostingsList rankedPageRank(List<Query.QueryTerm> queryTerms) {
         for (Query.QueryTerm queryTerm : queryTerms) {
             String term = queryTerm.term;
@@ -298,6 +333,11 @@ public class Searcher {
         return results;
     }
 
+    /**
+     * 
+     * @param queryTerms
+     * @return
+     */
     public PostingsList combinedPagedRank(List<Query.QueryTerm> queryTerms) {
         // Create empty dictionary to hold document scores
         Map<Integer, Double> scores = new HashMap<>();
@@ -311,7 +351,8 @@ public class Searcher {
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
-                double score = tfidf(document, term);
+                // double score = tfidf(document, term);
+                double score = tfidfWithEuclidean(document, term);
 
                 // Accumulate the score for the document
                 scores.merge(document.docID, score, Double::sum);
@@ -346,6 +387,9 @@ public class Searcher {
         return results;
     }
 
+    /**
+     * 
+     */
     public void readPagedRank() {
         try {
             System.err.println("Reading pagedRankProb to search engine... ");

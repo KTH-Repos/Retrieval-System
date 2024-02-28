@@ -10,6 +10,8 @@ package ir;
 import java.io.*;
 import java.net.IDN;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.nio.charset.*;
 
 /*
@@ -57,6 +59,8 @@ public class PersistentHashedIndex implements Index {
 
     ArrayList<Long> usedHashes = new ArrayList<>();
 
+    private final int ENTRYBYTESIZE = 16;
+
     // size of index in hashedindex is 195634
     // ===================================================================
 
@@ -72,7 +76,7 @@ public class PersistentHashedIndex implements Index {
         char lastChar;
         int size; // size of postingslist in bytes
 
-        public Entry(long pointer, char firstChar, char lastChar, int size) {
+        public Entry(long pointer, int size, char firstChar, char lastChar) {
             this.pointer = pointer;
             this.firstChar = firstChar;
             this.lastChar = lastChar;
@@ -163,11 +167,44 @@ public class PersistentHashedIndex implements Index {
      *
      * @param ptr The place in the dictionary file where to start reading.
      */
-    Entry readEntry(long ptr) {
+    Entry readEntry(long ptr, String term) {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return null;
+        long originalPtr = ptr;
+        while(true) {
+            try {
+                dictionaryFile.seek(ptr);
+                if(dictionaryFile.readChar() == term.charAt(0)){
+                    Character firstchar = term.charAt(0);
+                    Character secChar = dictionaryFile.readChar();
+                    // Check if the second character matches the token
+                    if (term.length() > 1 && secChar == term.charAt(1)) {
+                        // Read additional data and return an Entry
+                        long dataPtr = dictionaryFile.readLong();
+                        int size = dictionaryFile.readInt();
+                        return new Entry(dataPtr, size, firstchar, secChar);
+                    }
+                    
+                    // Check if the second character is a wildcard '*'
+                    if (term.length() == 1 && secChar == '-') {
+                        // Read additional data and return an Entry
+                        long dataPtr = dictionaryFile.readLong();
+                        int size = dictionaryFile.readInt();
+                        return new Entry(dataPtr, size, firstchar, '-');
+                    }
+                }
+
+                long hash = ptr/ENTRYBYTESIZE;
+                ptr = ((hash+1
+                )%TABLESIZE)*ENTRYBYTESIZE;
+                dictionaryFile.seek(ptr);
+                if(ptr == originalPtr || dictionaryFile.readChar() == '\0' || dictionaryFile.readChar() == ' ')
+                    return null;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // ==================================================================
@@ -222,24 +259,23 @@ public class PersistentHashedIndex implements Index {
             // YOUR CODE HERE
             //
             for (String token : index.keySet()) {
-
                 long dataFilePointer = dataFile.getFilePointer();
                 PostingsList pl = index.get(token);
                 String postingsListString = pl.toString();
                 int size = writeData(postingsListString, dataFilePointer);
-
                 long pointer = hash(token);
                 if (usedHashes.contains(pointer)) {
+                    pointer = findNewHash(pointer);
                     collisions++;
-                    pointer += 2;
-                    while (usedHashes.contains(pointer)) {
-                        pointer = (pointer + 2) % TABLESIZE;
-                    }
                 }
                 usedHashes.add(pointer);
-                Entry entry;
-                entry = new Entry(dataFilePointer, token, size);
-                writeEntry(entry, pointer);
+                if(token.length() > 1) {
+                    Entry entry = new Entry(dataFilePointer, size, token.charAt(0), token.charAt(1));
+                    writeEntry(entry, pointer);
+                }else {
+                    Entry entry = new Entry(dataFilePointer, size, token.charAt(0), '*');
+                    writeEntry(entry, pointer);
+                }
             }
 
         } catch (IOException e) {
@@ -258,11 +294,68 @@ public class PersistentHashedIndex implements Index {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         // ed
-
+        PostingsList postingsList = index.get(token);
+        if(postingsList == null) {
+            long hash = hash(token);
+            Entry entry = readEntry(hash, token);
+            if(entry != null) {
+                String postingsListString = readData(entry.pointer, entry.size);
+                postingsList = getPostingsList(postingsListString);
+                index.put(token, postingsList);
+            }
+        }
         
-        return null;
+        return postingsList;
     }
 
+    public boolean isValidInteger(String str) {
+        try {
+            // Attempt to parse the string as an integer
+            Integer.parseInt(str.trim());
+            // If parsing succeeds, return true
+            return true;
+        } catch (NumberFormatException e) {
+            // If parsing fails, return false
+            return false;
+        }
+    }
+    
+
+    public PostingsList getPostingsList(String encodedString) {
+
+        PostingsList postingsList = new PostingsList();
+        // Split the encoded string by semi-colons to get individual entries
+        encodedString = encodedString.substring(0, encodedString.length()-1);
+        
+        String[] entries = encodedString.split(";");
+    
+        // Process each entry
+        for (String entry : entries) {
+            // Split the entry by "/" to separate docID and the rest
+            String[] parts = entry.split("/");   
+            if(!parts[0].trim().isEmpty() && !isValidInteger(parts[0].trim()) && parts[0].trim().equals("")) {
+                continue;
+            }
+            int docID = Integer.parseInt(parts[0].trim()); // Trim before parsing
+            String rest = parts[1].trim(); // Trim after splitting
+    
+            // Split the rest by ":" to separate score and offsets
+            String[] parts2 = rest.split(":");
+            double score = Double.parseDouble(parts2[0].trim()); // Trim before parsing
+            // Extract offsets and add them to an ArrayList
+            String[] offsetStrings = parts2[1].trim().split(","); // Trim after splitting
+            ArrayList<Integer> offsets = new ArrayList<>();
+            for (String offsetStr : offsetStrings) {
+                offsets.add(Integer.parseInt(offsetStr.trim())); // Trim before parsing
+            }
+    
+            // Create a new PostingsEntry and add it to the postingsList
+            PostingsEntry postingsEntry = new PostingsEntry(docID, score, offsets);
+            postingsList.addPersistedEntry(postingsEntry);
+        }
+        return postingsList;
+    }
+    
     /**
      * Inserts this token in the main-memory hashtable.
      */
@@ -280,11 +373,15 @@ public class PersistentHashedIndex implements Index {
     }
 
     public long hash(String token) {
-        long pointer = token.hashCode();
-        pointer %= TABLESIZE;
-        if (pointer < 0) {
-            pointer += TABLESIZE;
-        }
+        return (Math.abs(token.hashCode())% TABLESIZE) * ENTRYBYTESIZE;
+    }
+
+    public long findNewHash(long pointer) {
+        long hash = pointer/ENTRYBYTESIZE;
+        do {
+            hash = (hash+1)%TABLESIZE;
+            pointer = (hash)*ENTRYBYTESIZE;
+        } while(usedHashes.contains(pointer));
         return pointer;
     }
 
@@ -298,3 +395,6 @@ public class PersistentHashedIndex implements Index {
         System.err.println("done!");
     }
 }
+
+
+

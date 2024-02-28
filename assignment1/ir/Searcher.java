@@ -66,10 +66,22 @@ public class Searcher {
         }
     }
 
+    /**
+     * Extract postingslist of terms from index
+     * @param query query term
+     * @param termIndex index of query term in list of queryterms
+     * @return postingslist of term
+     */
     private PostingsList extractPostingList(Query query, int termIndex) {
         return index.getPostings(query.queryterm.get(termIndex).term);
     }
 
+    /**
+     * Find common entries with help of docID for two postingslists
+     * @param pl1 first postingslist
+     * @param pl2 second postingslist
+     * @return postinglist with common entries in pl1 & pl2
+     */
     public PostingsList intersect(PostingsList pl1, PostingsList pl2) {
         PostingsList answer = new PostingsList();
         ListIterator<PostingsEntry> itr1 = pl1.getEntries().listIterator();
@@ -96,6 +108,13 @@ public class Searcher {
         return answer;
     }
 
+    /**
+     * Find common entries with help of docID and offsets of entries by checking
+     * if terms lie beside one another
+     * @param pl1 first postingslist
+     * @param pl2 second postinglist
+     * @return postinglist with common entires in pl1 & pl2
+     */
     private PostingsList positionalIntersect(PostingsList pl1, PostingsList pl2) {
         PostingsList answer = new PostingsList();
         ListIterator<PostingsEntry> itr1 = pl1.getEntries().listIterator();
@@ -119,6 +138,7 @@ public class Searcher {
                 if (!itrOffset1.hasNext() || !itrOffset2.hasNext())
                     break;
 
+                // Create iterators for the offset lists
                 Integer itrOffset1Value = itrOffset1.next();
                 Integer itrOffset2Value = itrOffset2.next();
 
@@ -169,44 +189,4 @@ public class Searcher {
 
         return answer;
     }
-
-    /*
-     * private void intersectOffsets(PostingsEntry pe1, PostingsEntry pe2, int
-     * docID, PostingsList answer) {
-     * // PostingsList answer = new PostingsList();
-     * ArrayList<Integer> pp1 = pe1.offset;
-     * ArrayList<Integer> pp2 = pe2.offset;
-     * 
-     * ListIterator<Integer> itrOffset1 = pp1.listIterator();
-     * ListIterator<Integer> itrOffset2 = pp2.listIterator();
-     * 
-     * while (itrOffset1.hasNext() && itrOffset2.hasNext()) {
-     * Integer itrOffset1Value = itrOffset1.next();
-     * Integer itrOffset2Value = itrOffset2.next();
-     * 
-     * while (itrOffset1Value != null && itrOffset2Value != null) {
-     * if (Math.abs(itrOffset2Value - itrOffset1Value) == 1) {
-     * // PostingsEntry entry = new PostingsEntry(docID, itrOffset2Value);
-     * // ArrayList<PostingsEntry> list = answer.getEntries();
-     * answer.getEntries().add(new PostingsEntry(docID));
-     * break;
-     * } else if (itrOffset2Value > itrOffset1Value) {
-     * if (itrOffset1.hasNext()) {
-     * itrOffset1Value = itrOffset1.next();
-     * } else {
-     * return;
-     * }
-     * } else {
-     * if (itrOffset2.hasNext()) {
-     * itrOffset2Value = itrOffset2.next();
-     * } else {
-     * return;
-     * }
-     * }
-     * }
-     * }
-     * // return answer;
-     * }
-     */
-
 }

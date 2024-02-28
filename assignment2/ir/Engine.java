@@ -8,11 +8,17 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ir.Query.QueryTerm;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * This is the main class for the search engine.
@@ -73,6 +79,7 @@ public class Engine {
         searcher = new Searcher(index, kgIndex);
         gui = new SearchGUI(this);
         gui.init();
+        boolean readEucLength = true;
         /*
          * Calls the indexer to index the chosen directory structure.
          * Access to the index is synchronized since we don't want to
@@ -86,6 +93,12 @@ public class Engine {
                 for (int i = 0; i < dirNames.size(); i++) {
                     File dokDir = new File(dirNames.get(i));
                     indexer.processFiles(dokDir, is_indexing);
+                }
+                if(readEucLength) {
+                    calculateEuclideanLength();
+                    writeEuclideanLengthToFile();
+                }else {
+                    readDataFromFile();
                 }
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText(String.format("Indexing done in %.1f seconds.", elapsedTime / 1000.0));
@@ -134,49 +147,76 @@ public class Engine {
         }
     }
 
+    /**
+     * Calculate the euclidean length of a document
+     * 
+     * @return
+     */
+    private void calculateEuclideanLength() {
+        int collectionSize = index.docNames.size();
+        for(int i = 0; i < indexer.termFrequency.size(); i++) {
+            double sumOfResults = 0.0;
+            for (String token : indexer.termFrequency.get(i).keySet()) {
+                // Iterate through the keys of the current HashMap
+                    int tf = indexer.termFrequency.get(i).get(token);
+                    int df = indexer.documentFrequency.get(token);
+                    double idf = Math.log10((double)collectionSize/(double)df);
+                    sumOfResults += (tf*idf)*(tf*idf);
+            }
+            searcher.docsEucLength.put(i, Math.sqrt(sumOfResults));
+        }
+    }
+
+    /**
+     * Store in a file euclidean length of every word in a doc
+     * 
+     * @param filenameDir
+     * @param docID
+     * @param euclideanLength
+     */
+    private void writeEuclideanLengthToFile() {
+        // Write Euclidean length to file
+        String fileName = "euclideanLength.txt"; 
+        // String docTitle = Paths.get(filenameDir).getFileName().toString();
+        try (FileWriter writer = new FileWriter(fileName, true)) {
+            for (Map.Entry<Integer, Double> entry : searcher.docsEucLength.entrySet()) {
+                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing Euclidean length to file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reads euclidean length of docs from euclideanLength.txt and stores data in
+     * hashmap in searcher
+     * 
+     * @param fileName
+     * @param docIDLengthMap
+     */
+    public void readDataFromFile() {
+        try {
+            System.err.println("Reading euclidean length of documents from euclideanLength.txt");
+            String fileName = "euclideanLength.txt";
+            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Split the line by comma and semicolon
+                String[] parts = line.split("[,]");
+                int docID = Integer.parseInt(parts[0].trim());
+                double length = Double.parseDouble(parts[1].trim());
+                searcher.docsEucLength.put(docID, length);
+            }
+            System.err.println("Finished reading from euclideanLength.txt");
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     /* ----------------------------------------------- */
 
     public static void main(String[] args) {
         Engine e = new Engine(args);
-
-        // PersistentHashedIndex index = new PersistentHashedIndex();
-        // index.writeIndex();
-        /*
-         * String inputText = "20080527 18:37:16 slow slow slow or entry entry entry";
-         * String inputText2 = "entry entry slow slow slow or slow slow slow";
-         * // Creating a list of strings by splitting the text using spaces
-         * List<String> stringList = new ArrayList<>();
-         * List<String> stringList2 = new ArrayList<>();
-         * String[] words = inputText.split("\\s+");
-         * String[] words2 = inputText2.split("\\s+");
-         * 
-         * for (String word : words) {
-         * System.out.println(word);
-         * stringList.add(word);
-         * }
-         * 
-         * for (String word : words2) {
-         * System.out.println(word);
-         * stringList2.add(word);
-         * }
-         * 
-         * // Printing the list
-         * // System.out.println(stringList);
-         * for (int i = 0; i < stringList.size(); i++) {
-         * e.index.insert(stringList.get(i), 0, i);
-         * }
-         * 
-         * for (int i = 0; i < stringList2.size(); i++) {
-         * e.index.insert(stringList2.get(i), 1, i);
-         * }
-         * 
-         * Query query = new Query();
-         * query.queryterm.add(query.new QueryTerm("entry", 0));
-         * query.queryterm.add(query.new QueryTerm("slow", 0));
-         * 
-         * e.searcher.search(query, QueryType.PHRASE_QUERY);
-         */
-
     }
 
 }

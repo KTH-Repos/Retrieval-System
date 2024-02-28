@@ -32,6 +32,12 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         this.offset.add(offset);
     }
 
+    public PostingsEntry(int docID, double score, ArrayList<Integer> offset) {
+        this.docID = docID;
+        this.score = score;
+        this.offset = offset;
+    }
+
     public PostingsEntry(int docID) {
         this.docID = docID;
     }
@@ -47,17 +53,18 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("docID=").append(docID);
-        sb.append(", score=").append(score);
+        sb.append(docID);
+        sb.append("/").append(score).append(":");
         // sb.append(", offsets=").append(offset.toString());
-        sb.append("Offsets: [");
+        // sb.append("Offsets: [");
         for (int i = 0; i < offset.size(); i++) {
             if (i > 0) {
-                sb.append(", ");
+                sb.append(",");
             }
             sb.append(offset.get(i).toString());
         }
-        sb.append("]");
+        sb.append(";");
         return sb.toString();
     }
+
 }

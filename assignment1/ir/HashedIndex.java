@@ -47,12 +47,7 @@ public class HashedIndex implements Index {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        System.out.println("Size of index : " + index.size());
         return index.get(token);
-    }
-
-    public Map<String, PostingsList> getIndex() {
-        return this.index;
     }
 
     /**

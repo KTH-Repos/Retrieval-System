@@ -1,0 +1,41 @@
+QUERY = "graduate program mathematics UC Davis"
+QUERY_ID = 1, DOC_ID = Candidate_Statements.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Computer_Science.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = ECE_Course_Reviews.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Economics.f, RELEVANCE_SCORE = 2
+QUERY_ID = 1, DOC_ID = Elaine_Kasimatis.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Evelyn_Silvia.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Events_Calendars.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Hydrology.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Mathematics.f, RELEVANCE_SCORE = 3
+QUERY_ID = 1, DOC_ID = MattHh.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Private_Tutoring.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Statistics.f, RELEVANCE_SCORE = 3
+QUERY_ID = 1, DOC_ID = Student_Organizations.f, RELEVANCE_SCORE = 0 
+QUERY_ID = 1, DOC_ID = UCD_Honors_and_Prizes.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = UC_Davis_English_Department.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = University_Departments.f, RELEVANCE_SCORE = 1
+QUERY_ID = 1, DOC_ID = What_I_Wish_I_Knew...Before_Coming_to_UC_Davis_Entomology.f, RELEVANCE_SCORE = 0
+QUERY_ID = 1, DOC_ID = Wildlife%2C_Fish%2C_and_Conservation_Biology.f, RELEVANCE_SCORE = 0
+
+Precision : 4/22 = 18%
+Recall : 4/100 = 4%
+
+QUERY = "graduate mathematics education uc davis"
+QUERY_ID = 2, DOC_ID = Candidate_Statements.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = Elaine_Kasimatis.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = Events_Calendars.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = Graduate_Groups.f, RELEVANCE_SCORE = 2
+QUERY_ID = 2, DOC_ID = Linda_Katehi.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = Private_Tutoring.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = Student_Organizations.f, RELEVANCE_SCORE = 0 
+QUERY_ID = 2, DOC_ID = The_Mary_Jeanne_Gilhooly_Award.f, RELEVANCE_SCORE = 0 
+QUERY_ID = 2, DOC_ID = UCD_Honors_and_Prizes.f, RELEVANCE_SCORE = 0
+QUERY_ID = 2, DOC_ID = University_Departments.f, RELEVANCE_SCORE = 1
+
+Precision: 2/22 = 9%
+Recall : 2/100 = 2%
+
+
+
+
