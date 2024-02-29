@@ -273,7 +273,7 @@ public class PersistentHashedIndex implements Index {
                     Entry entry = new Entry(dataFilePointer, size, token.charAt(0), token.charAt(1));
                     writeEntry(entry, pointer);
                 }else {
-                    Entry entry = new Entry(dataFilePointer, size, token.charAt(0), '*');
+                    Entry entry = new Entry(dataFilePointer, size, token.charAt(0), '-');
                     writeEntry(entry, pointer);
                 }
             }

@@ -18,7 +18,7 @@ QUERY_ID = 1, DOC_ID = University_Departments.f, RELEVANCE_SCORE = 1
 QUERY_ID = 1, DOC_ID = What_I_Wish_I_Knew...Before_Coming_to_UC_Davis_Entomology.f, RELEVANCE_SCORE = 0
 QUERY_ID = 1, DOC_ID = Wildlife%2C_Fish%2C_and_Conservation_Biology.f, RELEVANCE_SCORE = 0
 
-Precision : 4/22 = 18%
+Precision : 4/19 = 21%
 Recall : 4/100 = 4%
 
 QUERY = "graduate mathematics education uc davis"
@@ -33,7 +33,7 @@ QUERY_ID = 2, DOC_ID = The_Mary_Jeanne_Gilhooly_Award.f, RELEVANCE_SCORE = 0
 QUERY_ID = 2, DOC_ID = UCD_Honors_and_Prizes.f, RELEVANCE_SCORE = 0
 QUERY_ID = 2, DOC_ID = University_Departments.f, RELEVANCE_SCORE = 1
 
-Precision: 2/22 = 9%
+Precision: 2/11 = 18%
 Recall : 2/100 = 2%
 
 
