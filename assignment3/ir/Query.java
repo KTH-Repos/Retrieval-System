@@ -127,7 +127,7 @@ public class Query {
             expandedQuery.put(queryTerm.term, alpha * queryTerm.weight);
         }
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < docIsRelevant.length; i++) {
             if(docIsRelevant[i]) {
                 PostingsEntry entry = results.get(i);
                 String docName = engine.index.docNames.get(entry.docID);

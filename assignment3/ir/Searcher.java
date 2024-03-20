@@ -61,8 +61,8 @@ public class Searcher {
                 break;
 
             case RANKED_QUERY:
-                /* if (pagedRankProb.isEmpty())
-                    readPagedRank(); */
+                if (pagedRankProb.isEmpty())
+                    readPagedRank(); 
                 if (rankingType == rankingType.TF_IDF)
                     searchResults = rankedTfIdf(query.queryterm);
 
@@ -214,10 +214,11 @@ public class Searcher {
         // Loop through all search query terms
         for (Query.QueryTerm queryTerm : queryTerms) {
             String term = queryTerm.term;
-
             // Retrieve documents containing the search term
             PostingsList allDocuments = index.getPostings(term);
-
+            if(allDocuments == null) {
+                continue;
+            }
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
@@ -239,7 +240,10 @@ public class Searcher {
             String term = queryTerm.term;
             // Retrieve documents containing the search term
             PostingsList allDocuments = index.getPostings(term);
-
+            
+            if(allDocuments == null) {
+                continue;
+            }
             for (PostingsEntry document : allDocuments.getEntries()) {
                 if (!uniqueDocs.contains(document.docID)) {
                     document.score = scores.getOrDefault(document.docID, 0.0) / index.docLengths.get(document.docID);
@@ -307,7 +311,9 @@ public class Searcher {
 
             // Retrieve documents containing the search term
             PostingsList allDocuments = index.getPostings(term);
-
+            if(allDocuments == null) {
+                continue;
+            }
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
@@ -329,6 +335,9 @@ public class Searcher {
             String term = queryTerm.term;
             // Retrieve documents containing the search term
             PostingsList allDocuments = index.getPostings(term);
+            if(allDocuments == null) {
+                continue;
+            }
 
             for (PostingsEntry document : allDocuments.getEntries()) {
                 if (!uniqueDocs.contains(document.docID)) {
