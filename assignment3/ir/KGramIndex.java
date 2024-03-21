@@ -100,13 +100,12 @@ public class KGramIndex {
 
                 kGramsHolder = newToken.substring(i, i + getK());
 
-                List<KGramPostingsEntry> listOfEntries = index.putIfAbsent(kGramsHolder,
-                        new ArrayList<KGramPostingsEntry>());
-                if (listOfEntries != null) {
-                    List<KGramPostingsEntry> postingsForKGram = index.get(kGramsHolder);
-                    if (!postingsForKGram.contains(kEntry)) {
-                        postingsForKGram.add(kEntry);
-                    }
+                if(!index.containsKey(kGramsHolder)) {
+                    index.put(kGramsHolder, new ArrayList<KGramPostingsEntry>());
+                }
+
+                if(!index.get(kGramsHolder).contains(kEntry)) {
+                    index.get(kGramsHolder).add(kEntry);
                 }
             }
         }
