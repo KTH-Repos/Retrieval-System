@@ -49,6 +49,11 @@ public class Searcher {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
+
+        getKGrams(query);
+
+        //-----------------------------------------------------------//
+
         PostingsList searchResults = null;
 
         switch (queryType) {
@@ -74,6 +79,14 @@ public class Searcher {
                 break;
         }
         return searchResults;
+    }
+
+    private void getKGrams(Query query) {
+        String[] kGrams = new String[query.queryterm.size()];
+        for(int i = 0; i < query.queryterm.size(); i++) {
+            kGrams[i] = query.queryterm.get(i).term;
+        }
+        kgIndex.findKGrams(kGrams);
     }
 
     private PostingsList simpleSearch(Query query, QueryType queryType) {

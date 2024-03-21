@@ -100,11 +100,11 @@ public class KGramIndex {
 
                 kGramsHolder = newToken.substring(i, i + getK());
 
-                if(!index.containsKey(kGramsHolder)) {
+                if (!index.containsKey(kGramsHolder)) {
                     index.put(kGramsHolder, new ArrayList<KGramPostingsEntry>());
                 }
 
-                if(!index.get(kGramsHolder).contains(kEntry)) {
+                if (!index.get(kGramsHolder).contains(kEntry)) {
                     index.get(kGramsHolder).add(kEntry);
                 }
             }
@@ -130,6 +130,28 @@ public class KGramIndex {
     /** Get a term by the given id */
     public String getTermByID(Integer id) {
         return id2term.get(id);
+    }
+
+    public void findKGrams(String[] kgrams) {
+        List<KGramPostingsEntry> answer = null;
+
+        for (int i = 0; i < kgrams.length; i++) {
+            if (kgrams[i].length() != getK()) {
+                System.out.println("K = " + getK() + "doesn't match with length of this input : " + kgrams[i]);
+                return;
+            }
+
+            if (i == 0) {
+                answer = getPostings(kgrams[i]);
+            } else {
+                answer = intersect(answer, getPostings(kgrams[i]));
+            }
+        }
+        if (answer == null) {
+            System.out.println("No posting(s) found!");
+        } else {
+            System.out.println("Found " + answer.size() + " postings(s) for " + Arrays.toString(kgrams));
+        }
     }
 
     private static HashMap<String, String> decodeArgs(String[] args) {
