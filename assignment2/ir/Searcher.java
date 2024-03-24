@@ -53,6 +53,7 @@ public class Searcher {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
+        // System.out.println("Corpus size is : " + index.docNames.size()); => 17478
         PostingsList searchResults = null;
 
         switch (queryType) {
@@ -247,7 +248,7 @@ public class Searcher {
 
             for (PostingsEntry document : allDocuments.getEntries()) {
                 if (!uniqueDocs.contains(document.docID)) {
-                    document.score = scores.getOrDefault(document.docID, 0.0) / index.docLengths.get(document.docID);
+                    document.score = scores.get(document.docID);
                     results.getEntries().add(document);
                     uniqueDocs.add(document.docID); // Add document to the set
                 }
@@ -270,7 +271,7 @@ public class Searcher {
         int collectionSize = index.docNames.size();
         int documentFrequency = index.getPostings(term).size();
 
-        double idf = Math.log10(collectionSize / documentFrequency);
+        double idf = Math.log(collectionSize / documentFrequency);
         return termFrequency * idf;
     }
 
@@ -288,7 +289,7 @@ public class Searcher {
         int documentFrequency = index.getPostings(term).size();
         double eucLength = docsEucLength.get(entry.docID);
 
-        double idf = (Math.log10((double) collectionSize / (double) documentFrequency));
+        double idf = (Math.log((double) collectionSize / (double) documentFrequency));
 
         return ((double) termFrequency * idf) / eucLength;
     }
@@ -373,7 +374,7 @@ public class Searcher {
 
             for (PostingsEntry document : allDocuments.getEntries()) {
                 if (!uniqueDocs.contains(document.docID)) {
-                    double tdfScore = scores.getOrDefault(document.docID, 0.0) / index.docLengths.get(document.docID);
+                    double tdfScore = scores.get(document.docID);
                     String docTitle = Index.docNames.get(document.docID);
                     docTitle = docTitle.substring(docTitle.lastIndexOf("\\") + 1);
                     double pageRankScore = pagedRankProb.getOrDefault(docTitle, 0.0);
@@ -388,7 +389,7 @@ public class Searcher {
     }
 
     /**
-     * 
+     * Read pagedRankProbabilities from pageRankProb.txt and store in hashmap pagedRankProb
      */
     public void readPagedRank() {
         try {

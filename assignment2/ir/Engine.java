@@ -16,9 +16,13 @@ import ir.Query.QueryTerm;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This is the main class for the search engine.
@@ -67,6 +71,8 @@ public class Engine {
     /** For persistent indexes, we might not need to do any indexing. */
     boolean is_indexing = true;
 
+    int docCounter = 0;
+
     /* ----------------------------------------------- */
 
     /**
@@ -79,7 +85,7 @@ public class Engine {
         searcher = new Searcher(index, kgIndex);
         gui = new SearchGUI(this);
         gui.init();
-        boolean readEucLength = true;
+        boolean calculateEucLength = false;
         /*
          * Calls the indexer to index the chosen directory structure.
          * Access to the index is synchronized since we don't want to
@@ -94,12 +100,14 @@ public class Engine {
                     File dokDir = new File(dirNames.get(i));
                     indexer.processFiles(dokDir, is_indexing);
                 }
-                if(readEucLength) {
-                    calculateEuclideanLength();
+                if(calculateEucLength) {
+                    System.out.println("Calculating euclidean length of all docs!");
+                    calculateEuclideanLength(new File(dirNames.get(0)));
                     writeEuclideanLengthToFile();
+                    System.out.println("Finish writing euclidean length of all docs to local file!");
                 }else {
                     readDataFromFile();
-                }
+                } 
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText(String.format("Indexing done in %.1f seconds.", elapsedTime / 1000.0));
                 index.cleanup();
@@ -148,23 +156,47 @@ public class Engine {
     }
 
     /**
-     * Calculate the euclidean length of a document
+     * Calculate the euclidean length of all documents in the corpus
+     * Result is saved in a hashmap<String, Double>
      * 
      * @return
      */
-    private void calculateEuclideanLength() {
-        int collectionSize = index.docNames.size();
-        for(int i = 0; i < indexer.termFrequency.size(); i++) {
-            double sumOfResults = 0.0;
-            for (String token : indexer.termFrequency.get(i).keySet()) {
-                // Iterate through the keys of the current HashMap
-                    int tf = indexer.termFrequency.get(i).get(token);
-                    int df = indexer.documentFrequency.get(token);
-                    double idf = Math.log10((double)collectionSize/(double)df);
-                    sumOfResults += (tf*idf)*(tf*idf);
+    private void calculateEuclideanLength(File f) {
+        if (f.canRead()) {
+                if (f.isDirectory()) {
+                    String[] fs = f.list();
+                    // an IO error could occur
+                    if (fs != null) {
+                        for (int i = 0; i < fs.length; i++) {
+                            calculateEuclideanLength(new File(f, fs[i]));
+                        }
+                    }
+                } else {
+                    int docID = docCounter++;
+                    try {
+                        Reader reader = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8);
+                        Tokenizer tok = new Tokenizer(reader, true, false, true, patterns_file);
+                        int offset = 0;
+                        HashMap<String, Integer> termFreqForCurrentDoc = new HashMap<>();
+                        while (tok.hasMoreTokens()) {
+                            String token = tok.nextToken();
+                            termFreqForCurrentDoc.merge(token, 1, Integer::sum);
+                        }
+                        reader.close();
+                        int collectionSize = index.docNames.size();
+                        double sumOfResults = 0.0;
+                        for(String term : termFreqForCurrentDoc.keySet()) {
+                            int termFreq = termFreqForCurrentDoc.get(term);
+                            double documentFrequency = indexer.documentFrequency.get(term);
+                            double idf = Math.log((double)collectionSize/(double)documentFrequency);
+                            sumOfResults += (termFreq*idf)*(termFreq*idf);
+                        }
+                        searcher.docsEucLength.put(docID, Math.sqrt(sumOfResults));
+                    } catch (IOException e) {
+                        System.err.println("Warning: IOException during indexing.");
+                    }
+                }
             }
-            searcher.docsEucLength.put(i, Math.sqrt(sumOfResults));
-        }
     }
 
     /**
@@ -177,6 +209,7 @@ public class Engine {
     private void writeEuclideanLengthToFile() {
         // Write Euclidean length to file
         String fileName = "euclideanLength.txt"; 
+        System.out.println("Writing euclidean length of every doc to a " + fileName);
         // String docTitle = Paths.get(filenameDir).getFileName().toString();
         try (FileWriter writer = new FileWriter(fileName, true)) {
             for (Map.Entry<Integer, Double> entry : searcher.docsEucLength.entrySet()) {
