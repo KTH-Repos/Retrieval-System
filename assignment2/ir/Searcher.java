@@ -226,8 +226,8 @@ public class Searcher {
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
-                // double score = tfidf(document, term);
-                double score = tfidfWithEuclidean(document, term);
+                double score = tfidf(document, term);
+                // double score = tfidfWithEuclidean(document, term);
 
                 // Accumulate the score for the document
                 scores.merge(document.docID, score, Double::sum);
@@ -248,7 +248,8 @@ public class Searcher {
 
             for (PostingsEntry document : allDocuments.getEntries()) {
                 if (!uniqueDocs.contains(document.docID)) {
-                    document.score = scores.get(document.docID);
+                    // document.score = scores.get(document.docID);         // TODO: uncomment for euclidean length normalization
+                    document.score = scores.getOrDefault(document.docID,0.0) / index.docLengths.get(document.docID);
                     results.getEntries().add(document);
                     uniqueDocs.add(document.docID); // Add document to the set
                 }
@@ -352,8 +353,8 @@ public class Searcher {
             // Loop through all retrieved documents
             for (PostingsEntry document : allDocuments.getEntries()) {
                 // Calculate the score for the document for the current query term
-                // double score = tfidf(document, term);
-                double score = tfidfWithEuclidean(document, term);
+                double score = tfidf(document, term);
+                // double score = tfidfWithEuclidean(document, term);
 
                 // Accumulate the score for the document
                 scores.merge(document.docID, score, Double::sum);

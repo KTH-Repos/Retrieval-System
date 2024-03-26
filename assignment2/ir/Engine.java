@@ -100,14 +100,14 @@ public class Engine {
                     File dokDir = new File(dirNames.get(i));
                     indexer.processFiles(dokDir, is_indexing);
                 }
-                if(calculateEucLength) {
+                if (calculateEucLength) {
                     System.out.println("Calculating euclidean length of all docs!");
                     calculateEuclideanLength(new File(dirNames.get(0)));
                     writeEuclideanLengthToFile();
                     System.out.println("Finish writing euclidean length of all docs to local file!");
-                }else {
+                } else {
                     readDataFromFile();
-                } 
+                }
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText(String.format("Indexing done in %.1f seconds.", elapsedTime / 1000.0));
                 index.cleanup();
@@ -163,40 +163,39 @@ public class Engine {
      */
     private void calculateEuclideanLength(File f) {
         if (f.canRead()) {
-                if (f.isDirectory()) {
-                    String[] fs = f.list();
-                    // an IO error could occur
-                    if (fs != null) {
-                        for (int i = 0; i < fs.length; i++) {
-                            calculateEuclideanLength(new File(f, fs[i]));
-                        }
-                    }
-                } else {
-                    int docID = docCounter++;
-                    try {
-                        Reader reader = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8);
-                        Tokenizer tok = new Tokenizer(reader, true, false, true, patterns_file);
-                        int offset = 0;
-                        HashMap<String, Integer> termFreqForCurrentDoc = new HashMap<>();
-                        while (tok.hasMoreTokens()) {
-                            String token = tok.nextToken();
-                            termFreqForCurrentDoc.merge(token, 1, Integer::sum);
-                        }
-                        reader.close();
-                        int collectionSize = index.docNames.size();
-                        double sumOfResults = 0.0;
-                        for(String term : termFreqForCurrentDoc.keySet()) {
-                            int termFreq = termFreqForCurrentDoc.get(term);
-                            double documentFrequency = indexer.documentFrequency.get(term);
-                            double idf = Math.log((double)collectionSize/(double)documentFrequency);
-                            sumOfResults += (termFreq*idf)*(termFreq*idf);
-                        }
-                        searcher.docsEucLength.put(docID, Math.sqrt(sumOfResults));
-                    } catch (IOException e) {
-                        System.err.println("Warning: IOException during indexing.");
+            if (f.isDirectory()) {
+                String[] fs = f.list();
+                // an IO error could occur
+                if (fs != null) {
+                    for (int i = 0; i < fs.length; i++) {
+                        calculateEuclideanLength(new File(f, fs[i]));
                     }
                 }
+            } else {
+                int docID = docCounter++;
+                try {
+                    Reader reader = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8);
+                    Tokenizer tok = new Tokenizer(reader, true, false, true, patterns_file);
+                    HashMap<String, Integer> termFreqForCurrentDoc = new HashMap<>();
+                    while (tok.hasMoreTokens()) {
+                        String token = tok.nextToken();
+                        termFreqForCurrentDoc.merge(token, 1, Integer::sum);
+                    }
+                    reader.close();
+                    int collectionSize = index.docNames.size();
+                    double sumOfResults = 0.0;
+                    for (String term : termFreqForCurrentDoc.keySet()) {
+                        int termFreq = termFreqForCurrentDoc.get(term);
+                        double documentFrequency = indexer.documentFrequency.get(term);
+                        double idf = Math.log((double) collectionSize / (double) documentFrequency);
+                        sumOfResults += (termFreq * idf) * (termFreq * idf);
+                    }
+                    searcher.docsEucLength.put(docID, Math.sqrt(sumOfResults));
+                } catch (IOException e) {
+                    System.err.println("Warning: IOException during indexing.");
+                }
             }
+        }
     }
 
     /**
@@ -208,7 +207,7 @@ public class Engine {
      */
     private void writeEuclideanLengthToFile() {
         // Write Euclidean length to file
-        String fileName = "euclideanLength.txt"; 
+        String fileName = "euclideanLength.txt";
         System.out.println("Writing euclidean length of every doc to a " + fileName);
         // String docTitle = Paths.get(filenameDir).getFileName().toString();
         try (FileWriter writer = new FileWriter(fileName, true)) {
